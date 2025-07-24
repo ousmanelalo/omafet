@@ -42,8 +42,9 @@ ui <- dashboardPage(
   dashboardHeader(title = "Restaurant O'Mafet"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Gérant", tabName = "gerant_tab", icon = icon("edit")),
-      menuItem("Comptabilité", tabName = "proprietaire_tab", icon = icon("chart-line"))
+      menuItem("Comptabilité", tabName = "proprietaire_tab", icon = icon("chart-line")),
+      menuItem("Gérant", tabName = "gerant_tab", icon = icon("edit"))
+      
     )
   ),
   dashboardBody(
