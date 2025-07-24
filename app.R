@@ -665,7 +665,7 @@ server <- function(input, output, session) {
               rownames = FALSE
     )
   })
-}
+} 
 
 # Lancer l'application Shiny
 shinyApp(ui, server)
