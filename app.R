@@ -1,20 +1,20 @@
 library(shiny)
 library(DT) # Pour des tableaux interactifs
 library(ggplot2) # Pour les graphiques
-library(dplyr) # Pour la manipulation de donnÃ©es
+library(dplyr) # Pour la manipulation de données
 library(shinydashboard) # Pour une interface de tableau de bord moderne
-library(readr) # Pour lire/Ã©crire les CSV de maniÃ¨re robuste
+library(readr) # Pour lire/écrire les CSV de manière robuste
 library(tidyr) # Pour la fonction replace_na
-library(shinyalert) # Pour les boÃ®tes de dialogue de confirmation
-library(writexl) # Pour Ã©crire des fichiers Excel (xlsx)
-library(htmltools) # Assurez-vous que ce package est chargÃ©
+library(shinyalert) # Pour les boîtes de dialogue de confirmation
+library(writexl) # Pour écrire des fichiers Excel (xlsx)
+library(htmltools) # Assurez-vous que ce package est chargé
 
 
-# Ces fichiers seront crÃ©Ã©s dans le mÃªme rÃ©pertoire que votre app.R
+# Ces fichiers seront créés dans le même répertoire que votre app.R
 VENTES_FILE <- "ventes.csv"
 DEPENSES_FILE <- "depenses.csv"
 
-# --- Fonction utilitaire pour crÃ©er un fichier CSV vide si absent ---
+# --- Fonction utilitaire pour créer un fichier CSV vide si absent ---
 create_empty_csv_if_missing <- function(file_path, col_names) {
   if (!file.exists(file_path)) {
     df <- data.frame(matrix(ncol = length(col_names), nrow = 0))
@@ -28,27 +28,27 @@ create_empty_csv_if_missing <- function(file_path, col_names) {
       df$Montant <- as.numeric(character(0))
     }
     write_csv(df, file_path, append = FALSE, col_names = TRUE)
-    message(paste("Fichier CSV vide crÃ©Ã©:", file_path))
+    message(paste("Fichier CSV vide créé:", file_path))
   }
 }
 
-# CrÃ©e les fichiers vides si besoin au dÃ©marrage de l'application
-create_empty_csv_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "CatÃ©gorie"))
-create_empty_csv_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "CatÃ©gorie"))
+# Crée les fichiers vides si besoin au démarrage de l'application
+create_empty_csv_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "Catégorie"))
+create_empty_csv_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "Catégorie"))
 
 
-# --- DÃ©finition de l'Interface Utilisateur (UI) ---
+# --- Définition de l'Interface Utilisateur (UI) ---
 ui <- dashboardPage(
   dashboardHeader(title = "Restaurant O'Mafet"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("GÃ©rant", tabName = "gerant_tab", icon = icon("edit")),
-      menuItem("ComptabilitÃ©", tabName = "proprietaire_tab", icon = icon("chart-line"))
+      menuItem("Gérant", tabName = "gerant_tab", icon = icon("edit")),
+      menuItem("Comptabilité", tabName = "proprietaire_tab", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
     tabItems(
-      # Contenu de l'onglet "GÃ©rant (Saisie)"
+      # Contenu de l'onglet "Gérant (Saisie)"
       tabItem(tabName = "gerant_tab",
               
               fluidRow(
@@ -57,7 +57,7 @@ ui <- dashboardPage(
                   dateInput("sale_date", "Date de la vente:", value = Sys.Date()),
                   textInput("sale_description", "Description (ex: Vente du jour, Boissons):", placeholder = "Vente du jour"),
                   numericInput("sale_amount", "Montant de la vente (FCFA):", value = 0, min = 0),
-                  selectInput("sale_category", "CatÃ©gorie:",
+                  selectInput("sale_category", "Catégorie:",
                               choices = c("Plats", "Boissons", "Desserts", "Service traiteur", "Autres")),
                   actionButton("add_sale_button", "Ajouter la Recette", icon = icon("plus-circle")),
                   actionButton("update_sale_button", "Confirmer la modification", icon = icon("check")),
@@ -65,14 +65,14 @@ ui <- dashboardPage(
                   textOutput("status_message_sale")
                 ),
                 box(
-                  title = "Saisie des DÃ©penses", status = "danger", solidHeader = TRUE, width = 6,
-                  dateInput("expense_date", "Date de la dÃ©pense:", value = Sys.Date()),
-                  textInput("expense_description", "Description (ex: Achat lÃ©gumes, Loyer):", placeholder = "Achat lÃ©gumes"),
-                  numericInput("expense_amount", "Montant de la dÃ©pense (FCFA):", value = 0, min = 0),
-                  selectInput("expense_category", "CatÃ©gorie de dÃ©pense:",
-                              choices = c("IngrÃ©dients", "Salaires", "Loyer", "Nigelec", "NDE", "Carburant",
+                  title = "Saisie des Dépenses", status = "danger", solidHeader = TRUE, width = 6,
+                  dateInput("expense_date", "Date de la dépense:", value = Sys.Date()),
+                  textInput("expense_description", "Description (ex: Achat légumes, Loyer):", placeholder = "Achat légumes"),
+                  numericInput("expense_amount", "Montant de la dépense (FCFA):", value = 0, min = 0),
+                  selectInput("expense_category", "Catégorie de dépense:",
+                              choices = c("Ingrédients", "Salaires", "Loyer", "Nigelec", "NDE", "Carburant",
                                           "Entretien", "Marketing", "Autres")),
-                  actionButton("add_expense_button", "Ajouter la DÃ©pense", icon = icon("minus-circle")),
+                  actionButton("add_expense_button", "Ajouter la Dépense", icon = icon("minus-circle")),
                   actionButton("update_expense_button", "Confirmer la Modification", icon = icon("check")),
                   br(),br(),
                   textOutput("status_message_expense")
@@ -80,14 +80,14 @@ ui <- dashboardPage(
               )
       ),
       
-      # Contenu de l'onglet "PropriÃ©taire (ComptabilitÃ©)"
+      # Contenu de l'onglet "Propriétaire (Comptabilité)"
       tabItem(tabName = "proprietaire_tab",
               fluidRow(
                 box(
-                  title = "SÃ©lection de la pÃ©riode", status = "primary", solidHeader = TRUE, width = 12,
-                  dateRangeInput("date_range_owner", "SÃ©lectionner la pÃ©riode:",
+                  title = "Sélection de la période", status = "primary", solidHeader = TRUE, width = 12,
+                  dateRangeInput("date_range_owner", "Sélectionner la période:",
                                  start = Sys.Date() - 30, end = Sys.Date(),
-                                 language = "fr", separator = "Ã ")
+                                 language = "fr", separator = "à")
                 )
               ),
               fluidRow(
@@ -97,38 +97,38 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 box(
-                  title = "Tendances des Recettes et DÃ©penses", status = "info", solidHeader = TRUE, width = 12,
+                  title = "Tendances des Recettes et Dépenses", status = "info", solidHeader = TRUE, width = 12,
                   plotOutput("sales_expenses_trend")
                 )
               ),
-              fluidRow( # Nouvelle ligne pour les graphiques de rÃ©partition
+              fluidRow( # Nouvelle ligne pour les graphiques de répartition
                 box(
-                  title = "RÃ©partition des Recettes par CatÃ©gorie", status = "info", solidHeader = TRUE, width = 6,
+                  title = "Répartition des Recettes par Catégorie", status = "info", solidHeader = TRUE, width = 6,
                   plotOutput("sales_category_pie") # Nouveau plotOutput
                 ),
                 box(
-                  title = "RÃ©partition des DÃ©penses par CatÃ©gorie", status = "info", solidHeader = TRUE, width = 6,
+                  title = "Répartition des Dépenses par Catégorie", status = "info", solidHeader = TRUE, width = 6,
                   plotOutput("expense_category_pie")
                 )
               ),
               fluidRow(
                 box(
-                  title = "DÃ©tail des Recettes", status = "primary", solidHeader = TRUE, width = 12,
+                  title = "Détail des Recettes", status = "primary", solidHeader = TRUE, width = 12,
                   DTOutput("sales_table"),
                   br(), # Petit espace
-                  actionButton("edit_selected_sale", "Modifier la ligne sÃ©lectionnÃ©e", icon = icon("pencil-alt")),
-                  actionButton("delete_selected_sale", "Supprimer la ligne sÃ©lectionnÃ©e", icon = icon("trash-alt"), class = "btn-danger")
-                  # Les downloadButton pour CSV et XLSX sont retirÃ©s d'ici
+                  actionButton("edit_selected_sale", "Modifier la ligne sélectionnée", icon = icon("pencil-alt")),
+                  actionButton("delete_selected_sale", "Supprimer la ligne sélectionnée", icon = icon("trash-alt"), class = "btn-danger")
+                  # Les downloadButton pour CSV et XLSX sont retirés d'ici
                 )
               ),
               fluidRow(
                 box(
-                  title = "DÃ©tail des DÃ©penses", status = "primary", solidHeader = TRUE, width = 12,
+                  title = "Détail des Dépenses", status = "primary", solidHeader = TRUE, width = 12,
                   DTOutput("expenses_table"),
                   br(), # Petit espace
-                  actionButton("edit_selected_expense", "Modifier la ligne sÃ©lectionnÃ©e", icon = icon("pencil-alt")),
-                  actionButton("delete_selected_expense", "Supprimer la ligne sÃ©lectionnÃ©e", icon = icon("trash-alt"), class = "btn-danger")
-                  # Les downloadButton pour CSV et XLSX sont retirÃ©s d'ici
+                  actionButton("edit_selected_expense", "Modifier la ligne sélectionnée", icon = icon("pencil-alt")),
+                  actionButton("delete_selected_expense", "Supprimer la ligne sélectionnée", icon = icon("trash-alt"), class = "btn-danger")
+                  # Les downloadButton pour CSV et XLSX sont retirés d'ici
                 )
               )
       )
@@ -136,14 +136,14 @@ ui <- dashboardPage(
   )
 )
 
-# --- DÃ©finition de la Logique du Serveur ---
+# --- Définition de la Logique du Serveur ---
 server <- function(input, output, session) {
   
-  # RÃ©actifs pour stocker les donnÃ©es lues des CSV
+  # Réactifs pour stocker les données lues des CSV
   sales_data_reactive <- reactiveVal(NULL)
   expenses_data_reactive <- reactiveVal(NULL)
   
-  # Observer pour charger les donnÃ©es au dÃ©marrage et Ã  chaque mise Ã  jour
+  # Observer pour charger les données au démarrage et à chaque mise à jour
   observe({
     tryCatch({
       sales_data_raw <- read_csv(VENTES_FILE, show_col_types = FALSE)
@@ -160,30 +160,30 @@ server <- function(input, output, session) {
                                  Date = as.Date(Date)
                                ))
       
-      showNotification("DonnÃ©es chargÃ©es depuis les fichiers CSV.", type = "message", duration = 3)
+      showNotification("Données chargées depuis les fichiers CSV.", type = "message", duration = 3)
     }, error = function(e) {
-      showNotification(paste("Erreur de chargement des donnÃ©es depuis les CSV:", e$message,
-                             "VÃ©rifiez que les colonnes Montant et Date sont au bon format dans vos CSV."),
+      showNotification(paste("Erreur de chargement des données depuis les CSV:", e$message,
+                             "Vérifiez que les colonnes Montant et Date sont au bon format dans vos CSV."),
                        type = "error", duration = NULL)
     })
   })
   
-  # RÃ©actif pour stocker l'index de la ligne actuellement modifiÃ©e (ventes)
+  # Réactif pour stocker l'index de la ligne actuellement modifiée (ventes)
   current_sale_edit_index <- reactiveVal(NULL)
-  # RÃ©actif pour stocker l'index de la ligne actuellement modifiÃ©e (dÃ©penses)
+  # Réactif pour stocker l'index de la ligne actuellement modifiée (dépenses)
   current_expense_edit_index <- reactiveVal(NULL)
   
-  # --- Logique pour l'interface du GÃ©rant ---
+  # --- Logique pour l'interface du Gérant ---
   
   # Message de statut pour les recettes
   output$status_message_sale <- renderText({ "" })
   
-  # GÃ©rer l'ajout d'une nouvelle recette
+  # Gérer l'ajout d'une nouvelle recette
   observeEvent(input$add_sale_button, {
     req(input$sale_description, input$sale_amount)
     
     if (input$sale_amount < 0) {
-      showNotification("Le montant de la vente ne peut pas Ãªtre nÃ©gatif.", type = "warning")
+      showNotification("Le montant de la vente ne peut pas être négatif.", type = "warning")
       return()
     }
     
@@ -191,7 +191,7 @@ server <- function(input, output, session) {
       Date = input$sale_date,
       Description = input$sale_description,
       Montant = input$sale_amount,
-      CatÃ©gorie = input$sale_category,
+      Catégorie = input$sale_category,
       stringsAsFactors = FALSE
     )
     
@@ -200,11 +200,11 @@ server <- function(input, output, session) {
       updated_sales <- bind_rows(current_sales, new_sale)
       write_csv(updated_sales, VENTES_FILE)
       
-      # Relire pour assurer la cohÃ©rence des types et mettre Ã  jour le rÃ©actif
+      # Relire pour assurer la cohérence des types et mettre à jour le réactif
       sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE) %>%
                             mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
-      showNotification("Recette ajoutÃ©e avec succÃ¨s!", type = "message")
+      showNotification("Recette ajoutée avec succès!", type = "message")
       updateTextInput(session, "sale_description", value = "")
       updateNumericInput(session, "sale_amount", value = 0)
     }, error = function(e) {
@@ -212,70 +212,70 @@ server <- function(input, output, session) {
     })
   })
   
-  # GÃ©rer la modification d'une recette sÃ©lectionnÃ©e
+  # Gérer la modification d'une recette sélectionnée
   observeEvent(input$edit_selected_sale, {
     selected_row_index <- input$sales_table_rows_selected
-    req(selected_row_index) # S'assurer qu'une ligne est sÃ©lectionnÃ©e
+    req(selected_row_index) # S'assurer qu'une ligne est sélectionnée
     
-    # Obtient la ligne Ã  partir des donnÃ©es filtrÃ©es affichÃ©es dans le tableau
+    # Obtient la ligne à partir des données filtrées affichées dans le tableau
     data_to_edit <- filtered_sales()[selected_row_index, ]
     
-    # Trouver l'index de cette ligne dans les donnÃ©es non filtrÃ©es/originales (sales_data_reactive())
-    # C'est une mÃ©thode de recherche par correspondance. IdÃ©alement, utilisez un ID unique.
+    # Trouver l'index de cette ligne dans les données non filtrées/originales (sales_data_reactive())
+    # C'est une méthode de recherche par correspondance. Idéalement, utilisez un ID unique.
     all_sales <- sales_data_reactive()
     idx_in_original_data <- which(
       all_sales$Date == data_to_edit$Date &
         all_sales$Description == data_to_edit$Description &
         all_sales$Montant == data_to_edit$Montant &
-        all_sales$CatÃ©gorie == data_to_edit$CatÃ©gorie
+        all_sales$Catégorie == data_to_edit$Catégorie
     )
     
     if (length(idx_in_original_data) == 0) {
-      showNotification("La ligne sÃ©lectionnÃ©e n'a pas pu Ãªtre trouvÃ©e dans les donnÃ©es originales. Elle a peut-Ãªtre Ã©tÃ© modifiÃ©e ou supprimÃ©e. Actualisez la page.", type = "error")
+      showNotification("La ligne sélectionnée n'a pas pu être trouvée dans les données originales. Elle a peut-être été modifiée ou supprimée. Actualisez la page.", type = "error")
       return()
     } else if (length(idx_in_original_data) > 1) {
-      showNotification("Attention: Plusieurs lignes identiques trouvÃ©es. La modification pourrait ne pas cibler la bonne ligne. Un ID unique par entrÃ©e est recommandÃ© pour Ã©viter cela.", type = "warning", duration = 8)
-      # Pour cette implÃ©mentation simple, on prendra la premiÃ¨re correspondance.
+      showNotification("Attention: Plusieurs lignes identiques trouvées. La modification pourrait ne pas cibler la bonne ligne. Un ID unique par entrée est recommandé pour éviter cela.", type = "warning", duration = 8)
+      # Pour cette implémentation simple, on prendra la première correspondance.
       idx_in_original_data <- idx_in_original_data[1] 
     }
     
     current_sale_edit_index(idx_in_original_data)
     
-    # Mettre Ã  jour les champs de saisie avec les donnÃ©es de la ligne sÃ©lectionnÃ©e
+    # Mettre à jour les champs de saisie avec les données de la ligne sélectionnée
     updateDateInput(session, "sale_date", value = data_to_edit$Date)
     updateTextInput(session, "sale_description", value = data_to_edit$Description)
     updateNumericInput(session, "sale_amount", value = data_to_edit$Montant)
-    updateSelectInput(session, "sale_category", selected = data_to_edit$CatÃ©gorie)
+    updateSelectInput(session, "sale_category", selected = data_to_edit$Catégorie)
     
-    showNotification("Ligne de recette chargÃ©e pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
-    updateTabItems(session, "sidebarMenu", selected = "gerant_tab") # Basculer vers l'onglet GÃ©rant
+    showNotification("Ligne de recette chargée pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
+    updateTabItems(session, "sidebarMenu", selected = "gerant_tab") # Basculer vers l'onglet Gérant
   })
   
   # Confirmer la modification d'une recette
   observeEvent(input$update_sale_button, {
-    req(current_sale_edit_index()) # S'assurer qu'un index est stockÃ© pour modification
+    req(current_sale_edit_index()) # S'assurer qu'un index est stocké pour modification
     
     if (input$sale_amount < 0) {
-      showNotification("Le montant de la vente ne peut pas Ãªtre nÃ©gatif.", type = "warning")
+      showNotification("Le montant de la vente ne peut pas être négatif.", type = "warning")
       return()
     }
     
     current_sales <- sales_data_reactive()
     idx <- current_sale_edit_index()
     
-    # Mettre Ã  jour les valeurs de la ligne Ã  l'index spÃ©cifiÃ©
+    # Mettre à jour les valeurs de la ligne à l'index spécifié
     current_sales[idx, "Date"] <- input$sale_date
     current_sales[idx, "Description"] <- input$sale_description
     current_sales[idx, "Montant"] <- input$sale_amount
-    current_sales[idx, "CatÃ©gorie"] <- input$sale_category
+    current_sales[idx, "Catégorie"] <- input$sale_category
     
     tryCatch({
       write_csv(current_sales, VENTES_FILE)
       sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE) %>%
                             mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
-      showNotification("Recette modifiÃ©e avec succÃ¨s!", type = "message")
-      current_sale_edit_index(NULL) # RÃ©initialiser l'index de modification
+      showNotification("Recette modifiée avec succès!", type = "message")
+      current_sale_edit_index(NULL) # Réinitialiser l'index de modification
       updateTextInput(session, "sale_description", value = "") # Nettoyer les champs
       updateNumericInput(session, "sale_amount", value = 0)
     }, error = function(e) {
@@ -283,12 +283,12 @@ server <- function(input, output, session) {
     })
   })
   
-  # GÃ©rer la suppression d'une recette sÃ©lectionnÃ©e
+  # Gérer la suppression d'une recette sélectionnée
   observeEvent(input$delete_selected_sale, {
     selected_row_index <- input$sales_table_rows_selected
-    req(selected_row_index) # S'assurer qu'une ligne est sÃ©lectionnÃ©e
+    req(selected_row_index) # S'assurer qu'une ligne est sélectionnée
     
-    # RÃ©cupÃ©rer les donnÃ©es de la ligne Ã  supprimer (pour affichage dans la confirmation)
+    # Récupérer les données de la ligne à supprimer (pour affichage dans la confirmation)
     data_to_delete <- filtered_sales()[selected_row_index, ]
     
     shinyalert(
@@ -303,20 +303,20 @@ server <- function(input, output, session) {
           all_sales <- sales_data_reactive()
           
           # Trouver l'index de la ligne dans le dataframe original pour la suppression
-          # C'est le mÃªme challenge que pour la modification sans ID unique
+          # C'est le même challenge que pour la modification sans ID unique
           idx_in_original_data <- which(
             all_sales$Date == data_to_delete$Date &
               all_sales$Description == data_to_delete$Description &
               all_sales$Montant == data_to_delete$Montant &
-              all_sales$CatÃ©gorie == data_to_delete$CatÃ©gorie
+              all_sales$Catégorie == data_to_delete$Catégorie
           )
           
           if (length(idx_in_original_data) == 0) {
-            showNotification("La ligne sÃ©lectionnÃ©e n'a pas pu Ãªtre trouvÃ©e dans les donnÃ©es originales. Elle a peut-Ãªtre Ã©tÃ© modifiÃ©e ou supprimÃ©e. Actualisez la page.", type = "error")
+            showNotification("La ligne sélectionnée n'a pas pu être trouvée dans les données originales. Elle a peut-être été modifiée ou supprimée. Actualisez la page.", type = "error")
             return()
           } else if (length(idx_in_original_data) > 1) {
-            showNotification("Attention: Plusieurs lignes identiques trouvÃ©es. La suppression pourrait ne pas cibler la bonne ligne. Un ID unique par entrÃ©e est recommandÃ© pour Ã©viter cela.", type = "warning", duration = 8)
-            # Pour cette implÃ©mentation simple, on prendra la premiÃ¨re correspondance.
+            showNotification("Attention: Plusieurs lignes identiques trouvées. La suppression pourrait ne pas cibler la bonne ligne. Un ID unique par entrée est recommandé pour éviter cela.", type = "warning", duration = 8)
+            # Pour cette implémentation simple, on prendra la première correspondance.
             idx_in_original_data <- idx_in_original_data[1]
           }
           
@@ -325,7 +325,7 @@ server <- function(input, output, session) {
             write_csv(updated_sales, VENTES_FILE)
             sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE) %>%
                                   mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
-            showNotification("Recette supprimÃ©e avec succÃ¨s!", type = "message")
+            showNotification("Recette supprimée avec succès!", type = "message")
           }, error = function(e) {
             showNotification(paste("Erreur lors de la suppression de la recette:", e$message), type = "error")
           })
@@ -335,15 +335,15 @@ server <- function(input, output, session) {
   })
   
   
-  # Message de statut pour les dÃ©penses
+  # Message de statut pour les dépenses
   output$status_message_expense <- renderText({ "" })
   
-  # GÃ©rer l'ajout d'une nouvelle dÃ©pense
+  # Gérer l'ajout d'une nouvelle dépense
   observeEvent(input$add_expense_button, {
     req(input$expense_description, input$expense_amount)
     
     if (input$expense_amount < 0) {
-      showNotification("Le montant de la dÃ©pense ne peut pas Ãªtre nÃ©gatif.", type = "warning")
+      showNotification("Le montant de la dépense ne peut pas être négatif.", type = "warning")
       return()
     }
     
@@ -351,7 +351,7 @@ server <- function(input, output, session) {
       Date = input$expense_date,
       Description = input$expense_description,
       Montant = input$expense_amount,
-      CatÃ©gorie = input$expense_category,
+      Catégorie = input$expense_category,
       stringsAsFactors = FALSE
     )
     
@@ -363,15 +363,15 @@ server <- function(input, output, session) {
       expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE) %>%
                                mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
-      showNotification("DÃ©pense ajoutÃ©e avec succÃ¨s!", type = "message")
+      showNotification("Dépense ajoutée avec succès!", type = "message")
       updateTextInput(session, "expense_description", value = "")
       updateNumericInput(session, "expense_amount", value = 0)
     }, error = function(e) {
-      showNotification(paste("Erreur lors de l'ajout de la dÃ©pense:", e$message), type = "error")
+      showNotification(paste("Erreur lors de l'ajout de la dépense:", e$message), type = "error")
     })
   })
   
-  # GÃ©rer la modification d'une dÃ©pense sÃ©lectionnÃ©e
+  # Gérer la modification d'une dépense sélectionnée
   observeEvent(input$edit_selected_expense, {
     selected_row_index <- input$expenses_table_rows_selected
     req(selected_row_index)
@@ -383,14 +383,14 @@ server <- function(input, output, session) {
       all_expenses$Date == data_to_edit$Date &
         all_expenses$Description == data_to_edit$Description &
         all_expenses$Montant == data_to_edit$Montant &
-        all_expenses$CatÃ©gorie == data_to_edit$CatÃ©gorie
+        all_expenses$Catégorie == data_to_edit$Catégorie
     )
     
     if (length(idx_in_original_data) == 0) {
-      showNotification("La ligne sÃ©lectionnÃ©e n'a pas pu Ãªtre trouvÃ©e dans les donnÃ©es originales. Elle a peut-Ãªtre Ã©tÃ© modifiÃ©e ou supprimÃ©e. Actualisez la page.", type = "error")
+      showNotification("La ligne sélectionnée n'a pas pu être trouvée dans les données originales. Elle a peut-être été modifiée ou supprimée. Actualisez la page.", type = "error")
       return()
     } else if (length(idx_in_original_data) > 1) {
-      showNotification("Attention: Plusieurs lignes identiques trouvÃ©es. La modification pourrait ne pas cibler la bonne ligne. Un ID unique par entrÃ©e est recommandÃ© pour Ã©viter cela.", type = "warning", duration = 8)
+      showNotification("Attention: Plusieurs lignes identiques trouvées. La modification pourrait ne pas cibler la bonne ligne. Un ID unique par entrée est recommandé pour éviter cela.", type = "warning", duration = 8)
       idx_in_original_data <- idx_in_original_data[1]
     }
     
@@ -399,18 +399,18 @@ server <- function(input, output, session) {
     updateDateInput(session, "expense_date", value = data_to_edit$Date)
     updateTextInput(session, "expense_description", value = data_to_edit$Description)
     updateNumericInput(session, "expense_amount", value = data_to_edit$Montant)
-    updateSelectInput(session, "expense_category", selected = data_to_edit$CatÃ©gorie)
+    updateSelectInput(session, "expense_category", selected = data_to_edit$Catégorie)
     
-    showNotification("Ligne de dÃ©pense chargÃ©e pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
+    showNotification("Ligne de dépense chargée pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
     updateTabItems(session, "sidebarMenu", selected = "gerant_tab")
   })
   
-  # Confirmer la modification d'une dÃ©pense
+  # Confirmer la modification d'une dépense
   observeEvent(input$update_expense_button, {
     req(current_expense_edit_index())
     
     if (input$expense_amount < 0) {
-      showNotification("Le montant de la dÃ©pense ne peut pas Ãªtre nÃ©gatif.", type = "warning")
+      showNotification("Le montant de la dépense ne peut pas être négatif.", type = "warning")
       return()
     }
     
@@ -420,23 +420,23 @@ server <- function(input, output, session) {
     current_expenses[idx, "Date"] <- input$expense_date
     current_expenses[idx, "Description"] <- input$expense_description
     current_expenses[idx, "Montant"] <- input$expense_amount
-    current_expenses[idx, "CatÃ©gorie"] <- input$expense_category
+    current_expenses[idx, "Catégorie"] <- input$expense_category
     
     tryCatch({
       write_csv(current_expenses, DEPENSES_FILE)
       expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE) %>%
                                mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
-      showNotification("DÃ©pense modifiÃ©e avec succÃ¨s!", type = "message")
+      showNotification("Dépense modifiée avec succès!", type = "message")
       current_expense_edit_index(NULL)
       updateTextInput(session, "expense_description", value = "")
       updateNumericInput(session, "expense_amount", value = 0)
     }, error = function(e) {
-      showNotification(paste("Erreur lors de la modification de la dÃ©pense:", e$message), type = "error")
+      showNotification(paste("Erreur lors de la modification de la dépense:", e$message), type = "error")
     })
   })
   
-  # GÃ©rer la suppression d'une dÃ©pense sÃ©lectionnÃ©e
+  # Gérer la suppression d'une dépense sélectionnée
   observeEvent(input$delete_selected_expense, {
     selected_row_index <- input$expenses_table_rows_selected
     req(selected_row_index)
@@ -445,7 +445,7 @@ server <- function(input, output, session) {
     
     shinyalert(
       title = "Confirmer la suppression",
-      text = paste0("Voulez-vous vraiment supprimer la dÃ©pense du ", data_to_delete$Date, " : '", data_to_delete$Description, "' (", data_to_delete$Montant, " FCFA) ?"),
+      text = paste0("Voulez-vous vraiment supprimer la dépense du ", data_to_delete$Date, " : '", data_to_delete$Description, "' (", data_to_delete$Montant, " FCFA) ?"),
       type = "warning",
       showCancelButton = TRUE,
       confirmButtonText = "Oui, supprimer",
@@ -458,14 +458,14 @@ server <- function(input, output, session) {
             all_expenses$Date == data_to_delete$Date &
               all_expenses$Description == data_to_delete$Description &
               all_expenses$Montant == data_to_delete$Montant &
-              all_expenses$CatÃ©gorie == data_to_delete$CatÃ©gorie
+              all_expenses$Catégorie == data_to_delete$Catégorie
           )
           
           if (length(idx_in_original_data) == 0) {
-            showNotification("La ligne sÃ©lectionnÃ©e n'a pas pu Ãªtre trouvÃ©e dans les donnÃ©es originales. Elle a peut-Ãªtre Ã©tÃ© modifiÃ©e ou supprimÃ©e. Actualisez la page.", type = "error")
+            showNotification("La ligne sélectionnée n'a pas pu être trouvée dans les données originales. Elle a peut-être été modifiée ou supprimée. Actualisez la page.", type = "error")
             return()
           } else if (length(idx_in_original_data) > 1) {
-            showNotification("Attention: Plusieurs lignes identiques trouvÃ©es. La suppression pourrait ne pas cibler la bonne ligne. Un ID unique par entrÃ©e est recommandÃ© pour Ã©viter cela.", type = "warning", duration = 8)
+            showNotification("Attention: Plusieurs lignes identiques trouvées. La suppression pourrait ne pas cibler la bonne ligne. Un ID unique par entrée est recommandé pour éviter cela.", type = "warning", duration = 8)
             idx_in_original_data <- idx_in_original_data[1]
           }
           
@@ -474,18 +474,18 @@ server <- function(input, output, session) {
             write_csv(updated_expenses, DEPENSES_FILE)
             expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE) %>%
                                      mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
-            showNotification("DÃ©pense supprimÃ©e avec succÃ¨s!", type = "message")
+            showNotification("Dépense supprimée avec succès!", type = "message")
           }, error = function(e) {
-            showNotification(paste("Erreur lors de la suppression de la dÃ©pense:", e$message), type = "error")
+            showNotification(paste("Erreur lors de la suppression de la dépense:", e$message), type = "error")
           })
         }
       }
     )
   })
   
-  # --- Logique pour l'interface du PropriÃ©taire ---
+  # --- Logique pour l'interface du Propriétaire ---
   
-  # Filtrer les donnÃ©es de vente par la pÃ©riode sÃ©lectionnÃ©e
+  # Filtrer les données de vente par la période sélectionnée
   filtered_sales <- reactive({
     data <- sales_data_reactive()
     req(data)
@@ -497,7 +497,7 @@ server <- function(input, output, session) {
       filter(Date >= input$date_range_owner[1] & Date <= input$date_range_owner[2])
   })
   
-  # Filtrer les donnÃ©es de dÃ©pense par la pÃ©riode sÃ©lectionnÃ©e
+  # Filtrer les données de dépense par la période sélectionnée
   filtered_expenses <- reactive({
     data <- expenses_data_reactive()
     req(data)
@@ -524,7 +524,7 @@ server <- function(input, output, session) {
   output$total_expenses_box <- renderInfoBox({
     total_expenses <- sum(filtered_expenses()$Montant, na.rm = TRUE)
     infoBox(
-      "DÃ©penses Totales",
+      "Dépenses Totales",
       paste0(format(total_expenses, big.mark = " ", scientific = FALSE), " FCFA"),
       icon = icon("hand-holding-usd"),
       color = "red",
@@ -536,7 +536,7 @@ server <- function(input, output, session) {
     net_profit <- sum(filtered_sales()$Montant, na.rm = TRUE) - sum(filtered_expenses()$Montant, na.rm = TRUE)
     color <- if (net_profit >= 0) "blue" else "maroon"
     infoBox(
-      "BÃ©nÃ©fice Net",
+      "Bénéfice Net",
       paste0(format(net_profit, big.mark = " ", scientific = FALSE), " FCFA"),
       icon = icon("chart-line"),
       color = color,
@@ -544,7 +544,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # --- Graphique des Tendances Recettes/DÃ©penses ---
+  # --- Graphique des Tendances Recettes/Dépenses ---
   output$sales_expenses_trend <- renderPlot({
     req(filtered_sales(), filtered_expenses())
     
@@ -556,7 +556,7 @@ server <- function(input, output, session) {
     expenses_daily <- filtered_expenses() %>%
       group_by(Date) %>%
       summarise(Montant = sum(Montant, na.rm = TRUE), .groups = 'drop') %>%
-      mutate(Type = "DÃ©penses")
+      mutate(Type = "Dépenses")
     
     all_data_daily <- bind_rows(sales_daily, expenses_daily)
     
@@ -564,68 +564,68 @@ server <- function(input, output, session) {
     max_date <- max(input$date_range_owner[2], all_data_daily$Date, na.rm = TRUE)
     all_dates <- seq.Date(from = min_date, to = max_date, by = "day")
     
-    full_data <- expand.grid(Date = all_dates, Type = c("Recettes", "DÃ©penses")) %>%
+    full_data <- expand.grid(Date = all_dates, Type = c("Recettes", "Dépenses")) %>%
       left_join(all_data_daily, by = c("Date", "Type")) %>%
       replace_na(list(Montant = 0))
     
     ggplot(full_data, aes(x = Date, y = Montant, color = Type)) +
       geom_line(size = 1) +
       geom_point(size = 2) +
-      labs(title = "Tendances Quotidiennes des Recettes et DÃ©penses",
+      labs(title = "Tendances Quotidiennes des Recettes et Dépenses",
            y = "Montant (FCFA)", x = "Date") +
       theme_minimal() +
-      scale_color_manual(values = c("Recettes" = "green", "DÃ©penses" = "red")) +
+      scale_color_manual(values = c("Recettes" = "green", "Dépenses" = "red")) +
       scale_x_date(date_breaks = "1 week", date_labels = "%d %b") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
-  # --- Graphique de RÃ©partition des Recettes par CatÃ©gorie (NOUVEAU) ---
+  # --- Graphique de Répartition des Recettes par Catégorie (NOUVEAU) ---
   output$sales_category_pie <- renderPlot({
     req(filtered_sales())
     sales_summary <- filtered_sales() %>%
-      group_by(CatÃ©gorie) %>%
+      group_by(Catégorie) %>%
       summarise(Total_Montant = sum(Montant, na.rm = TRUE), .groups = 'drop') %>%
       mutate(Pourcentage = Total_Montant / sum(Total_Montant))
     
     if (nrow(sales_summary) == 0 || sum(sales_summary$Total_Montant) == 0) {
-      return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune recette pour cette pÃ©riode.") + theme_void())
+      return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune recette pour cette période.") + theme_void())
     }
     
-    ggplot(sales_summary, aes(x = "", y = Total_Montant, fill = CatÃ©gorie)) +
+    ggplot(sales_summary, aes(x = "", y = Total_Montant, fill = Catégorie)) +
       geom_bar(stat = "identity", width = 1, color = "white") +
       coord_polar("y", start = 0) +
       theme_void() +
-      labs(title = "RÃ©partition des Recettes par CatÃ©gorie") +
+      labs(title = "Répartition des Recettes par Catégorie") +
       geom_text(aes(label = scales::percent(Pourcentage, accuracy = 0.1)),
                 position = position_stack(vjust = 0.5), size = 4) +
       theme(legend.title = element_blank(),
             plot.title = element_text(hjust = 0.5))
   })
   
-  # --- Graphique de RÃ©partition des DÃ©penses par CatÃ©gorie ---
+  # --- Graphique de Répartition des Dépenses par Catégorie ---
   output$expense_category_pie <- renderPlot({
     req(filtered_expenses())
     expenses_summary <- filtered_expenses() %>%
-      group_by(CatÃ©gorie) %>%
+      group_by(Catégorie) %>%
       summarise(Total_Montant = sum(Montant, na.rm = TRUE), .groups = 'drop') %>%
       mutate(Pourcentage = Total_Montant / sum(Total_Montant))
     
     if (nrow(expenses_summary) == 0 || sum(expenses_summary$Total_Montant) == 0) {
-      return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune dÃ©pense pour cette pÃ©riode.") + theme_void())
+      return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune dépense pour cette période.") + theme_void())
     }
     
-    ggplot(expenses_summary, aes(x = "", y = Total_Montant, fill = CatÃ©gorie)) +
+    ggplot(expenses_summary, aes(x = "", y = Total_Montant, fill = Catégorie)) +
       geom_bar(stat = "identity", width = 1, color = "white") +
       coord_polar("y", start = 0) +
       theme_void() +
-      labs(title = "RÃ©partition des DÃ©penses par CatÃ©gorie") +
+      labs(title = "Répartition des Dépenses par Catégorie") +
       geom_text(aes(label = scales::percent(Pourcentage, accuracy = 0.1)),
                 position = position_stack(vjust = 0.5), size = 4) +
       theme(legend.title = element_blank(),
             plot.title = element_text(hjust = 0.5))
   })
   
-  # --- Tableaux DÃ©taillÃ©s (DT) pour les Recettes avec boutons d'exportation intÃ©grÃ©s ---
+  # --- Tableaux Détaillés (DT) pour les Recettes avec boutons d'exportation intégrés ---
   output$sales_table <- renderDT({
     req(filtered_sales())
     datatable(filtered_sales(),
@@ -634,15 +634,15 @@ server <- function(input, output, session) {
                 pageLength = 10, 
                 scrollX = TRUE,
                 dom = 'Bfrtip', # Place les boutons ('B') en haut
-                buttons = c('copy', 'csv', 'excel', 'pdf', 'print') # DÃ©finit les boutons
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print') # Définit les boutons
               ),
               filter = 'top',
-              selection = 'single', # Permet la sÃ©lection d'une seule ligne
+              selection = 'single', # Permet la sélection d'une seule ligne
               rownames = FALSE
     )
   })
   
-  # --- Tableaux DÃ©taillÃ©s (DT) pour les DÃ©penses avec boutons d'exportation intÃ©grÃ©s ---
+  # --- Tableaux Détaillés (DT) pour les Dépenses avec boutons d'exportation intégrés ---
   output$expenses_table <- renderDT({
     req(filtered_expenses())
     datatable(filtered_expenses(),
@@ -651,10 +651,10 @@ server <- function(input, output, session) {
                 pageLength = 10, 
                 scrollX = TRUE,
                 dom = 'Bfrtip', # Place les boutons ('B') en haut
-                buttons = c('copy', 'csv', 'excel', 'pdf', 'print') # DÃ©finit les boutons
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print') # Définit les boutons
               ),
               filter = 'top',
-              selection = 'single', # Permet la sÃ©lection d'une seule ligne
+              selection = 'single', # Permet la sélection d'une seule ligne
               rownames = FALSE
     )
   })
