@@ -3,23 +3,19 @@ library(DT) # Pour des tableaux interactifs
 library(ggplot2) # Pour les graphiques
 library(dplyr) # Pour la manipulation de données
 library(shinydashboard) # Pour une interface de tableau de bord moderne
-library(readr) # Pour lire les CSV de manière robuste
+library(readxl) # Pour lire les fichiers Excel
+library(writexl) # Pour écrire les fichiers Excel
 library(tidyr) # Pour la fonction replace_na
 library(shinyalert) # Pour les boîtes de dialogue de confirmation
-library(writexl) # Pour écrire des fichiers Excel (xlsx)
 library(htmltools) # Assurez-vous que ce package est chargé
-
-# Ajoutez cette ligne au tout début de votre script app.R
-# Même si la locale est déjà en UTF-8, cela peut aider à s'assurer de la cohérence.
-Sys.setlocale("LC_CTYPE", "fr_FR.UTF-8") # Ou "en_US.UTF-8" si c'est ce que votre système préfère
 
 
 # Ces fichiers seront créés dans le même répertoire que votre app.R
-VENTES_FILE <- "ventes.csv"
-DEPENSES_FILE <- "depenses.csv"
+VENTES_FILE <- "ventes.xlsx"
+DEPENSES_FILE <- "depenses.xlsx"
 
-# --- Fonction utilitaire pour créer un fichier CSV vide si absent ---
-create_empty_csv_if_missing <- function(file_path, col_names) {
+# --- Fonction utilitaire pour créer un fichier Excel vide si absent ---
+create_empty_excel_if_missing <- function(file_path, col_names) {
   if (!file.exists(file_path)) {
     df <- data.frame(matrix(ncol = length(col_names), nrow = 0))
     colnames(df) <- col_names
@@ -31,15 +27,16 @@ create_empty_csv_if_missing <- function(file_path, col_names) {
     if ("Montant" %in% col_names) {
       df$Montant <- as.numeric(character(0))
     }
-    # Écrire le CSV en utilisant write.csv de base R avec fileEncoding pour l'UTF-8
-    write.csv(df, file_path, row.names = FALSE, fileEncoding = "UTF-8")
-    message(paste("Fichier CSV vide créé:", file_path))
+    
+    # Écrire le fichier Excel vide
+    write_xlsx(df, file_path)
+    message(paste("Fichier Excel vide créé:", file_path))
   }
 }
 
-# Crée les fichiers vides si besoin au démarrage de l'application
-create_empty_csv_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "Catégorie"))
-create_empty_csv_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "Catégorie"))
+# Crée les fichiers Excel vides si besoin au démarrage de l'application
+create_empty_excel_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "Catégorie"))
+create_empty_excel_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "Catégorie"))
 
 
 # --- Définition de l'Interface Utilisateur (UI) ---
@@ -142,39 +139,32 @@ ui <- dashboardPage(
 # --- Définition de la Logique du Serveur ---
 server <- function(input, output, session) {
   
-  # Réactifs pour stocker les données lues des CSV
+  # Réactifs pour stocker les données lues des fichiers Excel
   sales_data_reactive <- reactiveVal(NULL)
   expenses_data_reactive <- reactiveVal(NULL)
   
   # Observer pour charger les données au démarrage et à chaque mise à jour
   observe({
     tryCatch({
-      # Forcer la lecture en UTF-8 avec read_csv (car elle supporte l'argument locale)
-      sales_data_raw <- read_csv(VENTES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-        # Nettoyer la colonne Catégorie pour s'assurer de l'encodage
-        mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) 
-      
+      # Lire les fichiers Excel avec read_excel
+      sales_data_raw <- read_excel(VENTES_FILE)
       sales_data_reactive(sales_data_raw %>%
                             mutate(
                               Montant = as.numeric(Montant),
                               Date = as.Date(Date)
                             ))
       
-      # Forcer la lecture en UTF-8 avec read_csv
-      expenses_data_raw <- read_csv(DEPENSES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-        # Nettoyer la colonne Catégorie pour s'assurer de l'encodage
-        mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte"))
-      
+      expenses_data_raw <- read_excel(DEPENSES_FILE)
       expenses_data_reactive(expenses_data_raw %>%
                                mutate(
                                  Montant = as.numeric(Montant),
                                  Date = as.Date(Date)
                                ))
       
-      showNotification("Données chargées depuis les fichiers CSV.", type = "message", duration = 3)
+      showNotification("Données chargées depuis les fichiers Excel.", type = "message", duration = 3)
     }, error = function(e) {
-      showNotification(paste("Erreur de chargement des données depuis les CSV:", e$message,
-                             "Vérifiez que les colonnes Montant et Date sont au bon format dans vos CSV. L'encodage attendu est UTF-8."),
+      showNotification(paste("Erreur de chargement des données depuis les fichiers Excel:", e$message,
+                             "Vérifiez que les colonnes Montant et Date sont au bon format dans vos fichiers Excel."),
                        type = "error", duration = NULL)
     })
   })
@@ -209,13 +199,11 @@ server <- function(input, output, session) {
     tryCatch({
       current_sales <- sales_data_reactive()
       updated_sales <- bind_rows(current_sales, new_sale)
-      # Utiliser write.csv pour l'écriture
-      write.csv(updated_sales, VENTES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
+      # Utiliser write_xlsx pour l'écriture
+      write_xlsx(updated_sales, VENTES_FILE)
       
       # Relire pour assurer la cohérence des types et mettre à jour le réactif
-      sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                            # Nettoyer la colonne Catégorie à la relecture aussi
-                            mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+      sales_data_reactive(read_excel(VENTES_FILE) %>%
                             mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
       showNotification("Recette ajoutée avec succès!", type = "message")
@@ -284,11 +272,9 @@ server <- function(input, output, session) {
     current_sales[idx, "Catégorie"] <- input$sale_category
     
     tryCatch({
-      # Utiliser write.csv pour l'écriture
-      write.csv(current_sales, VENTES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
-      sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                            # Nettoyer la colonne Catégorie à la relecture aussi
-                            mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+      # Utiliser write_xlsx pour l'écriture
+      write_xlsx(current_sales, VENTES_FILE)
+      sales_data_reactive(read_excel(VENTES_FILE) %>%
                             mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
       showNotification("Recette modifiée avec succès!", type = "message")
@@ -339,11 +325,9 @@ server <- function(input, output, session) {
           
           tryCatch({
             updated_sales <- all_sales[-idx_in_original_data, ] # Supprimer la ligne
-            # Utiliser write.csv pour l'écriture
-            write.csv(updated_sales, VENTES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
-            sales_data_reactive(read_csv(VENTES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                                  # Nettoyer la colonne Catégorie à la relecture aussi
-                                  mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+            # Utiliser write_xlsx pour l'écriture
+            write_xlsx(updated_sales, VENTES_FILE)
+            sales_data_reactive(read_excel(VENTES_FILE) %>%
                                   mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
             showNotification("Recette supprimée avec succès!", type = "message")
           }, error = function(e) {
@@ -378,12 +362,10 @@ server <- function(input, output, session) {
     tryCatch({
       current_expenses <- expenses_data_reactive()
       updated_expenses <- bind_rows(current_expenses, new_expense)
-      # Utiliser write.csv pour l'écriture
-      write.csv(updated_expenses, DEPENSES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
+      # Utiliser write_xlsx pour l'écriture
+      write_xlsx(updated_expenses, DEPENSES_FILE)
       
-      expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                               # Nettoyer la colonne Catégorie à la relecture aussi
-                               mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+      expenses_data_reactive(read_excel(DEPENSES_FILE) %>%
                                mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
       showNotification("Dépense ajoutée avec succès!", type = "message")
@@ -446,11 +428,9 @@ server <- function(input, output, session) {
     current_expenses[idx, "Catégorie"] <- input$expense_category
     
     tryCatch({
-      # Utiliser write.csv pour l'écriture
-      write.csv(current_expenses, DEPENSES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
-      expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                               # Nettoyer la colonne Catégorie à la relecture aussi
-                               mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+      # Utiliser write_xlsx pour l'écriture
+      write_xlsx(current_expenses, DEPENSES_FILE)
+      expenses_data_reactive(read_excel(DEPENSES_FILE) %>%
                                mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
       
       showNotification("Dépense modifiée avec succès!", type = "message")
@@ -497,11 +477,9 @@ server <- function(input, output, session) {
           
           tryCatch({
             updated_expenses <- all_expenses[-idx_in_original_data, ]
-            # Utiliser write.csv pour l'écriture
-            write.csv(updated_expenses, DEPENSES_FILE, row.names = FALSE, fileEncoding = "UTF-8")
-            expenses_data_reactive(read_csv(DEPENSES_FILE, show_col_types = FALSE, locale = locale(encoding = "UTF-8")) %>%
-                                     # Nettoyer la colonne Catégorie à la relecture aussi
-                                     mutate(Catégorie = iconv(Catégorie, from = "UTF-8", to = "UTF-8", sub = "byte")) %>%
+            # Utiliser write_xlsx pour l'écriture
+            write_xlsx(updated_expenses, DEPENSES_FILE)
+            expenses_data_reactive(read_excel(DEPENSES_FILE) %>%
                                      mutate(Montant = as.numeric(Montant), Date = as.Date(Date)))
             showNotification("Dépense supprimée avec succès!", type = "message")
           }, error = function(e) {
