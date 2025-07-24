@@ -33,8 +33,8 @@ create_empty_csv_if_missing <- function(file_path, col_names) {
 }
 
 # Crée les fichiers vides si besoin au démarrage de l'application
-create_empty_csv_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "Categorie"))
-create_empty_csv_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "Categorie"))
+create_empty_csv_if_missing(VENTES_FILE, c("Date", "Description", "Montant", "Catégorie"))
+create_empty_csv_if_missing(DEPENSES_FILE, c("Date", "Description", "Montant", "Catégorie"))
 
 
 # --- Définition de l'Interface Utilisateur (UI) ---
@@ -57,7 +57,7 @@ ui <- dashboardPage(
                   dateInput("sale_date", "Date de la vente:", value = Sys.Date()),
                   textInput("sale_description", "Description (ex: Vente du jour, Boissons):", placeholder = "Vente du jour"),
                   numericInput("sale_amount", "Montant de la vente (FCFA):", value = 0, min = 0),
-                  selectInput("sale_category", "Categorie:",
+                  selectInput("sale_category", "Catégorie:",
                               choices = c("Plats", "Boissons", "Desserts", "Service traiteur", "Autres")),
                   actionButton("add_sale_button", "Ajouter la Recette", icon = icon("plus-circle")),
                   actionButton("update_sale_button", "Confirmer la modification", icon = icon("check")),
@@ -69,7 +69,7 @@ ui <- dashboardPage(
                   dateInput("expense_date", "Date de la dépense:", value = Sys.Date()),
                   textInput("expense_description", "Description (ex: Achat légumes, Loyer):", placeholder = "Achat légumes"),
                   numericInput("expense_amount", "Montant de la dépense (FCFA):", value = 0, min = 0),
-                  selectInput("expense_category", "Categorie de dépense:",
+                  selectInput("expense_category", "Catégorie de dépense:",
                               choices = c("Ingrédients", "Salaires", "Loyer", "Nigelec", "NDE", "Carburant",
                                           "Entretien", "Marketing", "Autres")),
                   actionButton("add_expense_button", "Ajouter la Dépense", icon = icon("minus-circle")),
@@ -103,11 +103,11 @@ ui <- dashboardPage(
               ),
               fluidRow( # Nouvelle ligne pour les graphiques de répartition
                 box(
-                  title = "Répartition des Recettes par Categorie", status = "info", solidHeader = TRUE, width = 6,
+                  title = "Répartition des Recettes par Catégorie", status = "info", solidHeader = TRUE, width = 6,
                   plotOutput("sales_category_pie") # Nouveau plotOutput
                 ),
                 box(
-                  title = "Répartition des Dépenses par Categorie", status = "info", solidHeader = TRUE, width = 6,
+                  title = "Répartition des Dépenses par Catégorie", status = "info", solidHeader = TRUE, width = 6,
                   plotOutput("expense_category_pie")
                 )
               ),
@@ -191,7 +191,7 @@ server <- function(input, output, session) {
       Date = input$sale_date,
       Description = input$sale_description,
       Montant = input$sale_amount,
-      Categorie = input$sale_category,
+      Catégorie = input$sale_category,
       stringsAsFactors = FALSE
     )
     
@@ -227,7 +227,7 @@ server <- function(input, output, session) {
       all_sales$Date == data_to_edit$Date &
         all_sales$Description == data_to_edit$Description &
         all_sales$Montant == data_to_edit$Montant &
-        all_sales$Categorie == data_to_edit$Categorie
+        all_sales$Catégorie == data_to_edit$Catégorie
     )
     
     if (length(idx_in_original_data) == 0) {
@@ -245,7 +245,7 @@ server <- function(input, output, session) {
     updateDateInput(session, "sale_date", value = data_to_edit$Date)
     updateTextInput(session, "sale_description", value = data_to_edit$Description)
     updateNumericInput(session, "sale_amount", value = data_to_edit$Montant)
-    updateSelectInput(session, "sale_category", selected = data_to_edit$Categorie)
+    updateSelectInput(session, "sale_category", selected = data_to_edit$Catégorie)
     
     showNotification("Ligne de recette chargée pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
     updateTabItems(session, "sidebarMenu", selected = "gerant_tab") # Basculer vers l'onglet Gérant
@@ -267,7 +267,7 @@ server <- function(input, output, session) {
     current_sales[idx, "Date"] <- input$sale_date
     current_sales[idx, "Description"] <- input$sale_description
     current_sales[idx, "Montant"] <- input$sale_amount
-    current_sales[idx, "Categorie"] <- input$sale_category
+    current_sales[idx, "Catégorie"] <- input$sale_category
     
     tryCatch({
       write_csv(current_sales, VENTES_FILE)
@@ -308,7 +308,7 @@ server <- function(input, output, session) {
             all_sales$Date == data_to_delete$Date &
               all_sales$Description == data_to_delete$Description &
               all_sales$Montant == data_to_delete$Montant &
-              all_sales$Categorie == data_to_delete$Categorie
+              all_sales$Catégorie == data_to_delete$Catégorie
           )
           
           if (length(idx_in_original_data) == 0) {
@@ -351,7 +351,7 @@ server <- function(input, output, session) {
       Date = input$expense_date,
       Description = input$expense_description,
       Montant = input$expense_amount,
-      Categorie = input$expense_category,
+      Catégorie = input$expense_category,
       stringsAsFactors = FALSE
     )
     
@@ -383,7 +383,7 @@ server <- function(input, output, session) {
       all_expenses$Date == data_to_edit$Date &
         all_expenses$Description == data_to_edit$Description &
         all_expenses$Montant == data_to_edit$Montant &
-        all_expenses$Categorie == data_to_edit$Categorie
+        all_expenses$Catégorie == data_to_edit$Catégorie
     )
     
     if (length(idx_in_original_data) == 0) {
@@ -399,7 +399,7 @@ server <- function(input, output, session) {
     updateDateInput(session, "expense_date", value = data_to_edit$Date)
     updateTextInput(session, "expense_description", value = data_to_edit$Description)
     updateNumericInput(session, "expense_amount", value = data_to_edit$Montant)
-    updateSelectInput(session, "expense_category", selected = data_to_edit$Categorie)
+    updateSelectInput(session, "expense_category", selected = data_to_edit$Catégorie)
     
     showNotification("Ligne de dépense chargée pour modification. Modifiez les champs et cliquez sur 'Confirmer la Modification'.", type = "message", duration = 5)
     updateTabItems(session, "sidebarMenu", selected = "gerant_tab")
@@ -420,7 +420,7 @@ server <- function(input, output, session) {
     current_expenses[idx, "Date"] <- input$expense_date
     current_expenses[idx, "Description"] <- input$expense_description
     current_expenses[idx, "Montant"] <- input$expense_amount
-    current_expenses[idx, "Categorie"] <- input$expense_category
+    current_expenses[idx, "Catégorie"] <- input$expense_category
     
     tryCatch({
       write_csv(current_expenses, DEPENSES_FILE)
@@ -458,7 +458,7 @@ server <- function(input, output, session) {
             all_expenses$Date == data_to_delete$Date &
               all_expenses$Description == data_to_delete$Description &
               all_expenses$Montant == data_to_delete$Montant &
-              all_expenses$Categorie == data_to_delete$Categorie
+              all_expenses$Catégorie == data_to_delete$Catégorie
           )
           
           if (length(idx_in_original_data) == 0) {
@@ -579,11 +579,11 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
-  # --- Graphique de Répartition des Recettes par Categorie (NOUVEAU) ---
+  # --- Graphique de Répartition des Recettes par Catégorie (NOUVEAU) ---
   output$sales_category_pie <- renderPlot({
     req(filtered_sales())
     sales_summary <- filtered_sales() %>%
-      group_by(Categorie) %>%
+      group_by(Catégorie) %>%
       summarise(Total_Montant = sum(Montant, na.rm = TRUE), .groups = 'drop') %>%
       mutate(Pourcentage = Total_Montant / sum(Total_Montant))
     
@@ -591,22 +591,22 @@ server <- function(input, output, session) {
       return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune recette pour cette période.") + theme_void())
     }
     
-    ggplot(sales_summary, aes(x = "", y = Total_Montant, fill = Categorie)) +
+    ggplot(sales_summary, aes(x = "", y = Total_Montant, fill = Catégorie)) +
       geom_bar(stat = "identity", width = 1, color = "white") +
       coord_polar("y", start = 0) +
       theme_void() +
-      labs(title = "Répartition des Recettes par Categorie") +
+      labs(title = "Répartition des Recettes par Catégorie") +
       geom_text(aes(label = scales::percent(Pourcentage, accuracy = 0.1)),
                 position = position_stack(vjust = 0.5), size = 4) +
       theme(legend.title = element_blank(),
             plot.title = element_text(hjust = 0.5))
   })
   
-  # --- Graphique de Répartition des Dépenses par Categorie ---
+  # --- Graphique de Répartition des Dépenses par Catégorie ---
   output$expense_category_pie <- renderPlot({
     req(filtered_expenses())
     expenses_summary <- filtered_expenses() %>%
-      group_by(Categorie) %>%
+      group_by(Catégorie) %>%
       summarise(Total_Montant = sum(Montant, na.rm = TRUE), .groups = 'drop') %>%
       mutate(Pourcentage = Total_Montant / sum(Total_Montant))
     
@@ -614,11 +614,11 @@ server <- function(input, output, session) {
       return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "Aucune dépense pour cette période.") + theme_void())
     }
     
-    ggplot(expenses_summary, aes(x = "", y = Total_Montant, fill = Categorie)) +
+    ggplot(expenses_summary, aes(x = "", y = Total_Montant, fill = Catégorie)) +
       geom_bar(stat = "identity", width = 1, color = "white") +
       coord_polar("y", start = 0) +
       theme_void() +
-      labs(title = "Répartition des Dépenses par Categorie") +
+      labs(title = "Répartition des Dépenses par Catégorie") +
       geom_text(aes(label = scales::percent(Pourcentage, accuracy = 0.1)),
                 position = position_stack(vjust = 0.5), size = 4) +
       theme(legend.title = element_blank(),
@@ -659,7 +659,7 @@ server <- function(input, output, session) {
     )
   })
   
-  
+ 
   
 }
 
